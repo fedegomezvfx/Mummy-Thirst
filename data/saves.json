@@ -1,0 +1,27 @@
+[
+  {
+    "id": "save_1790810222897_cpkx6",
+    "name": "Prueba Nivel 2",
+    "level": 2,
+    "lives": 4,
+    "bottlesCollected": 3,
+    "totalBottlesNeeded": 10,
+    "energy": null,
+    "cameraAngle": 0,
+    "scenarioConfig": null,
+    "notes": "Progreso guardado desde la aplicacion",
+    "date": "2026-09-30T23:17:02.897Z"
+  },
+  {
+    "id": "default-save-1",
+    "name": "Comienzo de Aventura (Nivel 1)",
+    "level": 1,
+    "lives": 5,
+    "bottlesCollected": 0,
+    "totalBottlesNeeded": 10,
+    "energy": 100,
+    "cameraAngle": 0,
+    "date": "2026-09-30T23:01:33.737Z",
+    "notes": "Partida inicial recomendada"
+  }
+]

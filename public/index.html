@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Mummy Thirst — Aventura Voxel 3D</title>
+  <meta name="description" content="Mummy Thirst: Recorre las ruinas egipcias, esquiva y vence a las arañas, y recoge las 10 botellas de agua para saciar la sed de la momia.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Outfit:wght@400;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Three.js Local Engine -->
+  <script src="libs/three.min.js"></script>
+</head>
+<body>
+
+  <!-- Game Container -->
+  <div id="game-container">
+    <canvas id="game-canvas"></canvas>
+
+    <!-- IN-GAME HUD (Basado fielmente en grafica juego.png) -->
+    <div id="game-hud" class="hud-container hidden">
+      <!-- Top Left: Vidas & Barra de Energía -->
+      <div class="hud-top-left">
+        <!-- Vidas (Hasta 5 cabezas de momia) -->
+        <div class="hud-lives-container">
+          <div class="hud-label">VIDAS</div>
+          <div id="hud-lives-row" class="hud-lives-row">
+            <!-- 5 Mummy Heads injected dynamically -->
+          </div>
+        </div>
+
+        <!-- Barra de Energía tallada en piedra arenisca -->
+        <div class="hud-energy-container">
+          <div class="hud-label">ENERGÍA (SHIFT: CORRER)</div>
+          <div class="sandstone-energy-frame">
+            <div id="hud-energy-bar" class="energy-fill" style="width: 100%;"></div>
+            <div class="energy-glow"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Center: Nivel Actual & Notificaciones -->
+      <div class="hud-top-center">
+        <div id="hud-level-badge" class="level-stone-badge">NIVEL 1</div>
+        <div id="hud-notification" class="hud-notification hidden"></div>
+      </div>
+
+      <!-- Top Right: Contador de Botellas & Botón Guardar / Menú -->
+      <div class="hud-top-right">
+        <!-- Contador de Agua (Icono de botella + Placa de piedra tallada) -->
+        <div class="hud-water-counter-wrapper">
+          <div class="water-bottle-icon" title="Botella de agua"></div>
+          <div class="sandstone-counter-tablet">
+            <span id="hud-water-count" class="counter-text">0/10</span>
+          </div>
+        </div>
+
+        <!-- Botones de Acción Rápida (Guardar Preset, Girar Cámara, Sonido, Pausa) -->
+        <div class="hud-quick-actions">
+          <button id="btn-quick-save" class="hud-btn stone-btn" title="Guardar Preset / Partida">
+            💾 GUARDAR
+          </button>
+          <button id="btn-open-presets" class="hud-btn stone-btn" title="Ver lista de Presets guardados">
+            📜 PRESETS
+          </button>
+          <button id="btn-rotate-cam" class="hud-btn stone-btn icon-only" title="Girar vista isométrica (Tecla Q / E)">
+            🔄
+          </button>
+          <button id="btn-toggle-sound" class="hud-btn stone-btn icon-only" title="Sonido On/Off">
+            🔊
+          </button>
+          <button id="btn-pause-game" class="hud-btn stone-btn icon-only" title="Pausar juego">
+            ⏸️
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile / On-screen Controls Overlay (Para pantallas táctiles o accesibilidad) -->
+      <div id="onscreen-controls" class="onscreen-controls">
+        <div class="joystick-zone" id="joystick-zone">
+          <div class="joystick-base" id="joystick-base">
+            <div class="joystick-stick" id="joystick-stick"></div>
+          </div>
+        </div>
+        <div class="action-buttons-zone">
+          <button id="btn-action-attack" class="action-btn attack-btn" title="Atacar arañas (ESPACIO)">
+            ⚔️ ATACAR
+          </button>
+          <button id="btn-action-sprint" class="action-btn sprint-btn" title="Correr (SHIFT)">
+            ⚡ CORRER
+          </button>
+          <div class="cam-rot-group">
+            <button id="btn-cam-left" class="action-btn cam-btn" title="Girar izquierda (Q)">↺ Q</button>
+            <button id="btn-cam-right" class="action-btn cam-btn" title="Girar derecha (E)">↻ E</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN MENU (Basado exactamente en Menu.png) -->
+    <div id="main-menu" class="menu-overlay">
+      <div class="menu-hero-bg">
+        <!-- Imagen de referencia oficial del menú como fondo ambiental -->
+        <img src="assets/Menu.png" alt="Mummy Thirst Portada" class="menu-bg-img" id="menu-bg-img">
+        <div class="menu-fog-overlay"></div>
+      </div>
+
+      <div class="menu-content">
+        <!-- Título tallado Mummy Thirst -->
+        <div class="menu-title-wrapper">
+          <h1 class="menu-main-title">MUMMY<br><span class="title-water">THIRST</span></h1>
+          <div class="menu-subtitle">AVENTURA 3D VOXEL EN EL DESIERTO EGIPCIO</div>
+        </div>
+
+        <!-- Opciones principales solicitadas por el diseño -->
+        <div class="menu-buttons-wrapper">
+          <button id="btn-start-game" class="menu-action-btn primary-btn">
+            <span class="btn-water-drop">💧</span> INICIAR JUEGO
+          </button>
+          <button id="btn-load-game" class="menu-action-btn secondary-btn">
+            <span class="btn-icon">📜</span> CARGAR PARTIDA
+          </button>
+          <button id="btn-how-to-play" class="menu-action-btn info-btn">
+            <span class="btn-icon">ℹ️</span> CÓMO JUGAR
+          </button>
+        </div>
+
+        <div class="menu-footer-credits">
+          Image Campus &bull; Antigravity 3D Voxel Edition
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: GESTOR DE PRESETS / PARTIDAS GUARDADAS EN SERVIDOR -->
+    <div id="modal-presets" class="modal-overlay hidden">
+      <div class="modal-card sandstone-card">
+        <div class="modal-header">
+          <h2>📜 PARTIDAS Y PRESETS GUARDADOS</h2>
+          <button id="btn-close-presets" class="close-modal-btn">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Formulario para Guardar Nuevo Preset -->
+          <div class="save-new-preset-box">
+            <h3>💾 Guardar Composición / Partida Actual</h3>
+            <div class="save-input-row">
+              <input type="text" id="input-preset-name" placeholder="Ej: Momia en el Nivel 3 con 5 vidas" maxlength="40">
+              <button id="btn-submit-save" class="stone-btn save-btn">GUARDAR EN SERVIDOR</button>
+            </div>
+            <div id="save-status-msg" class="status-msg"></div>
+          </div>
+
+          <!-- Lista de Presets Indexados del Servidor -->
+          <div class="presets-list-section">
+            <div class="section-title-row">
+              <h3>Partidas Disponibles en Servidor</h3>
+              <button id="btn-refresh-presets" class="refresh-btn" title="Refrescar lista">🔄 Actualizar</button>
+            </div>
+            <div id="presets-list" class="presets-list">
+              <div class="loading-spinner">Cargando presets desde el servidor...</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button id="btn-dismiss-presets" class="stone-btn">CERRAR</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: CÓMO JUGAR -->
+    <div id="modal-tutorial" class="modal-overlay hidden">
+      <div class="modal-card sandstone-card tutorial-card">
+        <div class="modal-header">
+          <h2>🧭 GUÍA DEL AVENTURERO SEDIENTO</h2>
+          <button id="btn-close-tutorial" class="close-modal-btn">&times;</button>
+        </div>
+        <div class="modal-body tutorial-content">
+          <div class="tut-section">
+            <div class="tut-icon">💧</div>
+            <div class="tut-text">
+              <h4>OBJETIVO PRINCIPAL</h4>
+              <p>La momia tiene una sed inmensa. Encuentra y recoge <strong>10 BOTELLAS DE AGUA</strong> en cada nivel para saciar su sed y abrir el camino al siguiente nivel.</p>
+            </div>
+          </div>
+
+          <div class="tut-section">
+            <div class="tut-icon">❤️</div>
+            <div class="tut-text">
+              <h4>VIDAS Y RECUPERACIÓN</h4>
+              <p>Empiezas con hasta <strong>5 vidas</strong>. Si una araña te pica, pierdes 1 vida. ¡Pero cada <strong>3 botellas recogidas</strong> recuperas <strong>+1 vida</strong>!</p>
+            </div>
+          </div>
+
+          <div class="tut-section">
+            <div class="tut-icon">🕷️</div>
+            <div class="tut-text">
+              <h4>ARAÑAS ENEMIGAS</h4>
+              <p>Pequeñas arañas patrullan las ruinas y te perseguirán si te acercas. Presiona <strong>ESPACIO</strong> o el botón <strong>ATACAR</strong> para destruirlas con un giro.</p>
+            </div>
+          </div>
+
+          <div class="tut-section">
+            <div class="tut-icon">🎮</div>
+            <div class="tut-text">
+              <h4>CONTROLES</h4>
+              <ul>
+                <li><strong>W, A, S, D / Flechas:</strong> Mover a la momia (permanece siempre centrada).</li>
+                <li><strong>Q / E:</strong> Girar la cámara isométrica alrededor de la momia.</li>
+                <li><strong>ESPACIO / Click:</strong> Atacar arañas.</li>
+                <li><strong>SHIFT:</strong> Correr (consume energía).</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="btn-start-from-tut" class="stone-btn primary-btn">¡ENTENDIDO, A JUGAR!</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAUSE OVERLAY -->
+    <div id="pause-overlay" class="modal-overlay hidden">
+      <div class="modal-card sandstone-card pause-card">
+        <h2>⏸️ JUEGO EN PAUSA</h2>
+        <div class="pause-menu-actions">
+          <button id="btn-resume-game" class="stone-btn primary-btn">REANUDAR</button>
+          <button id="btn-pause-save" class="stone-btn">GUARDAR PARTIDA</button>
+          <button id="btn-pause-presets" class="stone-btn">CARGAR PRESET</button>
+          <button id="btn-quit-to-menu" class="stone-btn danger-btn">VOLVER AL MENÚ</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- GAME OVER OVERLAY -->
+    <div id="game-over-overlay" class="modal-overlay hidden">
+      <div class="modal-card sandstone-card defeat-card">
+        <h2 class="defeat-title">💀 LA MOMIA HA COLAPSADO DE SED</h2>
+        <p>Las arañas del desierto te han derrotado. ¿Deseas volver a intentar este nivel?</p>
+        <div class="game-over-actions">
+          <button id="btn-retry-level" class="stone-btn primary-btn">🔄 REINTENTAR NIVEL</button>
+          <button id="btn-game-over-load" class="stone-btn">📜 CARGAR PARTIDA</button>
+          <button id="btn-game-over-menu" class="stone-btn">🏠 MENÚ PRINCIPAL</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEVEL COMPLETE OVERLAY -->
+    <div id="level-complete-overlay" class="modal-overlay hidden">
+      <div class="modal-card sandstone-card victory-card">
+        <div class="victory-header-icon">🏆</div>
+        <h2 class="victory-title">¡NIVEL COMPLETADO!</h2>
+        <p class="victory-sub" id="victory-message">¡Has recolectado las 10 botellas de agua!</p>
+        <div class="level-stats-box">
+          <div class="stat-item"><span class="stat-label">Vidas Restantes:</span> <span id="stat-lives" class="stat-val">5/5</span></div>
+          <div class="stat-item"><span class="stat-label">Arañas Vencidas:</span> <span id="stat-spiders" class="stat-val">0</span></div>
+          <div class="stat-item"><span class="stat-label">Siguiente Nivel:</span> <span id="stat-next-level" class="stat-val">NIVEL 2</span></div>
+        </div>
+        <div class="victory-actions">
+          <button id="btn-next-level" class="stone-btn primary-btn">▶️ SIGUIENTE NIVEL</button>
+          <button id="btn-victory-save" class="stone-btn">💾 GUARDAR PROGRESO</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- VICTORY (GAME BEATEN) OVERLAY -->
+    <div id="game-win-overlay" class="modal-overlay hidden">
+      <div class="modal-card sandstone-card epic-win-card">
+        <div class="victory-header-icon">👑💧</div>
+        <h2 class="victory-title">¡LA SED HA SIDO SACIADA!</h2>
+        <p>¡Felicitaciones! Has completado los <strong>10 NIVELES</strong> de <em>Mummy Thirst</em>. Las ruinas milenarias han revelado el Manantial Eterno y la momia ahora reina satisfecha y refrescada.</p>
+        <button id="btn-win-menu" class="stone-btn primary-btn">🏠 VOLVER AL MENÚ PRINCIPAL</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Game Scripts -->
+  <script src="js/audio.js"></script>
+  <script src="js/models.js"></script>
+  <script src="js/levels.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/saves.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

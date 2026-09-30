@@ -1,0 +1,17 @@
+{
+  "name": "mummy-thirst",
+  "version": "1.0.0",
+  "description": "Mummy Thirst - 3D Isometric Voxel Adventure Game",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "threejs",
+    "voxel",
+    "game",
+    "mummy-thirst"
+  ],
+  "author": "",
+  "license": "MIT"
+}
