@@ -1,9 +1,8 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const url = require('url');
 
-const PORT = process.env.PORT || 3000;
+let PORT = parseInt(process.env.PORT, 10) || 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const DATA_DIR = path.join(__dirname, 'data');
 const SAVES_FILE = path.join(DATA_DIR, 'saves.json');
@@ -79,7 +78,8 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  const parsedUrl = url.parse(req.url, true);
+  // Parse URL with standard URL API
+  const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const pathname = decodeURIComponent(parsedUrl.pathname);
 
   // REST API Routes
@@ -176,11 +176,28 @@ const server = http.createServer((req, res) => {
   });
 });
 
-server.listen(PORT, () => {
-  console.log('====================================================');
-  console.log('             MUMMY THIRST - SERVIDOR ACTIVO         ');
-  console.log('====================================================');
-  console.log(`   Puerto de la aplicacion : ${PORT}`);
-  console.log(`   Accede en tu navegador  : http://localhost:${PORT}`);
-  console.log('====================================================');
+// Auto-recovery if port is in use
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.log(`[AVISO] El puerto ${PORT} está ocupado por otra instancia. Intentando puerto ${PORT + 1}...`);
+    PORT += 1;
+    setTimeout(() => {
+      server.listen(PORT);
+    }, 300);
+  } else {
+    console.error('[ERROR]', err);
+  }
 });
+
+function startServer(portToTry) {
+  server.listen(portToTry, () => {
+    console.log('====================================================');
+    console.log('             MUMMY THIRST - SERVIDOR ACTIVO         ');
+    console.log('====================================================');
+    console.log(`   Puerto de la aplicacion : ${PORT}`);
+    console.log(`   Accede en tu navegador  : http://localhost:${PORT}`);
+    console.log('====================================================');
+  });
+}
+
+startServer(PORT);
